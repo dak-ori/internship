@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <!-- 이미지 + 이미지맵 연결 -->
+    <img src="static/net.jpg" usemap="#mymap" width="1000" height="1481" alt="포스터 이미지" />
+
+    <map name="mymap" id="mymap"></map>
+
+    <script>
+      fetch("polygons.json")
+        .then((response) => response.json())
+        .then((data) => {
+          const map = document.getElementById("mymap");
+
+          const links = ["https://ko.wikipedia.org/wiki/%EB%B0%95%EB%B3%B4%EA%B2%80", "https://ko.wikipedia.org/wiki/%EC%95%84%EC%9D%B4%EC%9C%A0"];
+
+          data.forEach((polygon, index) => {
+            const area = document.createElement("area");
+            area.shape = polygon.shape || "poly";
+            area.coords = polygon.coords;
+            area.href = links[index];
+            area.alt = polygon.label ? polygon.label : `area${index + 1}`;
+            map.appendChild(area);
+          });
+        })
+        .catch((error) => {
+          console.error("JSON 불러오기 실패:", error);
+        });
+    </script>
+  </body>
+</html>
