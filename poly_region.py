@@ -59,11 +59,11 @@ def main(image_path):
     image_with_polygons = draw_polygons(image, polygon_coords)
 
     filename = os.path.splitext(os.path.basename(image_path))[0]
-    save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
+    # save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
 
     cv2.imshow("Polygon Preview", image_with_polygons)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main("static/test.jpg")
+    main("static/net.jpg")
