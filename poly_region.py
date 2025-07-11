@@ -12,9 +12,9 @@ def load_image(image_path):
     h, w = image.shape[:2]
     return image, (w, h)  # (width, height)
 
-def predict_segmentation(model, image, classes=[0], imgsz=640):
+def predict_segmentation(model, image, classes=[0], imgsz=640, conf=0.4):
     """YOLO 모델 세그멘테이션 예측"""
-    results = model.predict(image, classes=classes, imgsz=imgsz, conf=0.4)
+    results = model.predict(image, classes=classes, imgsz=imgsz,conf=conf)
     return results
 
 def extract_polygon_coordinates(results):
@@ -34,7 +34,7 @@ def draw_polygons(image, polygon_coords, color=(0, 255, 0), thickness=2):
         cv2.polylines(image, [pts], isClosed=True, color=color, thickness=thickness)
     return image
 
-def save_polygons_to_json(polygon_coords, json_path, label="person", base_size=(1000, 1481)):
+def save_polygons_to_json(polygon_coords, json_path, label="person", base_size=(1120, 746)):
     """비율 기반으로 JSON 저장"""
     base_w, base_h = base_size
     polygon_data = []
@@ -52,18 +52,14 @@ def save_polygons_to_json(polygon_coords, json_path, label="person", base_size=(
         json.dump(polygon_data, f, indent=2)
 
 def main(image_path):
-    model = YOLO("models/yolo11n-seg.pt")
+    model = YOLO("models/yolo11m-seg.pt")
     image, base_size = load_image(image_path)
     results = predict_segmentation(model, image, classes=[0])
     polygon_coords = extract_polygon_coordinates(results)
     image_with_polygons = draw_polygons(image, polygon_coords)
 
     filename = os.path.splitext(os.path.basename(image_path))[0]
-    # save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
-
-    cv2.imshow("Polygon Preview", image_with_polygons)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
 
 if __name__ == "__main__":
-    main("static/net.jpg")
+    main("static/kimbap.png")

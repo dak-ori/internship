@@ -2,185 +2,301 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>부드럽고 유기적인 이미지맵</title>
+    <title>Web Image Map with Background</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8f9fa;
+        overflow-x: hidden;
+      }
+
+      .main-container {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .image-section {
+        position: relative;
+        max-width: 70vw;
+        flex-shrink: 0;
+      }
+
       #container {
         position: relative;
-        display: inline-block;
+        width: 100%;
       }
+
       img {
-        max-width: 100%;
+        width: 100%;
         height: auto;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         display: block;
       }
-      svg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        pointer-events: none;
-        width: 100%;
-        height: 100%;
-      }
+
       area {
         cursor: pointer;
       }
-      .highlight.outer {
-        fill: none;
-        stroke: magenta;
-        stroke-width: 8;
-        stroke-opacity: 0.3;
-        filter: blur(6px);
-        stroke-linejoin: round;
-        stroke-linecap: round;
+
+      .info-panel {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        width: 350px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
       }
-      .highlight.inner {
-        fill: none;
-        stroke: magenta;
-        stroke-width: 2;
-        filter: blur(1px);
-        stroke-linejoin: round;
-        stroke-linecap: round;
+
+      .modal-badge {
+        display: inline-block;
+        background: #ddd6fe;
+        color: #7c3aed;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 12px;
+      }
+
+      .modal-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin: 0 0 12px 0;
+      }
+
+      .modal-image {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      .modal-description {
+        font-size: 14px;
+        color: #444;
+        margin-bottom: 16px;
+        line-height: 1.6;
+      }
+
+      .modal-details {
+        font-size: 14px;
+        color: #333;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 6px;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .detail-value {
+        color: #666;
+        text-align: right;
+        margin-left: 20px;
       }
     </style>
   </head>
   <body>
-    <div id="container">
-      <img id="main-img" src="static/net.jpg" usemap="#map" alt="이미지맵" />
-      <svg id="highlight-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="main-container">
+      <!-- 왼쪽 이미지 섹션 -->
+      <div class="image-section">
+        <div id="container">
+          <img id="main-img" src="static/net.jpg" usemap="#map" alt="이미지맵" />
+          <map name="map" id="img-map"></map>
+        </div>
+      </div>
+
+      <!-- 오른쪽 정보 패널 -->
+      <div class="info-panel">
+        <div id="panel-badge" class="modal-badge" style="display: none"></div>
+        <h2 id="panel-title" class="modal-title">정보 패널</h2>
+        <img id="panel-image" class="modal-image" />
+        <p id="panel-description" class="modal-description"></p>
+        <div id="panel-details" class="modal-details"></div>
+      </div>
     </div>
 
-    <map name="map" id="img-map"></map>
-
     <script>
-      const jsonFilename = "json/net.json";
+      const infoMapData = {
+        넷플릭스: {
+          type: "서비스",
+          name: "넷플릭스",
+          description: "전 세계 최대 규모의 스트리밍 서비스 플랫폼입니다.",
+          image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop",
+          details: {
+            카테고리: "OTT 플랫폼",
+            설립년도: "1997년",
+            "구독자 수": "2억 3천만명",
+            본사: "미국 캘리포니아",
+            "월 구독료": "5,500원~17,000원",
+            특징: "오리지널 콘텐츠 제작",
+          },
+        },
+        "폭삭 속았수다": {
+          type: "콘텐츠",
+          name: "폭삭 속았수다",
+          description: "넷플릭스 오리지널 한국 드라마 시리즈로 로맨틱 코미디 장르입니다.",
+          image: "https://images.unsplash.com/photo-1489599809969-bba13d8d2dc3?w=400&h=200&fit=crop",
+          details: {
+            장르: "로맨틱 코미디",
+            출연진: "아이유, 박보검",
+            방영년도: "2025년",
+            에피소드: "부작",
+            평점: "8.2/10",
+            제작국가: "대한민국",
+          },
+        },
+      };
+
+      const defaultInfo = {
+        type: "정보",
+        name: "전체 배경",
+        description: "이미지의 배경입니다. 선택된 영역 외의 배경 정보입니다.",
+        details: {
+          설명: "전체 이미지 배경입니다.",
+          상태: "일반 배경",
+        },
+      };
+
+      function openInfoPanel(areaData) {
+        const badge = document.getElementById("panel-badge");
+        const title = document.getElementById("panel-title");
+        const image = document.getElementById("panel-image");
+        const description = document.getElementById("panel-description");
+        const details = document.getElementById("panel-details");
+
+        badge.textContent = areaData.type;
+        badge.style.display = "inline-block";
+        title.textContent = areaData.name;
+        description.textContent = areaData.description;
+
+        if (areaData.image) {
+          image.src = areaData.image;
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+
+        details.innerHTML = "";
+        Object.entries(areaData.details).forEach(([key, value]) => {
+          const div = document.createElement("div");
+          div.className = "detail-item";
+          div.innerHTML = `
+            <span class="detail-label">${key}</span>
+            <span class="detail-value">${value}</span>
+          `;
+          details.appendChild(div);
+        });
+      }
 
       const hardcodedRects = [
-        { coords: [400, 1120, 600, 1160], href: "link_rect_1.html", alt: "넷플릭스 시리즈" },
-        { coords: [320, 1355, 540, 1420], href: "https://www.netflix.com/kr/", alt: "NetFlix" },
-        { coords: [180, 1175, 820, 1325], href: "link_rect_3.html", alt: "폭삭 속았수다" },
+        {
+          coords: [320, 1355, 540, 1420],
+          alt: "넷플릭스",
+          infoKey: "넷플릭스",
+        },
+        {
+          coords: [180, 1175, 820, 1325],
+          alt: "폭삭 속았수다",
+          infoKey: "폭삭 속았수다",
+        },
       ];
 
-      function catmullRomToBezier(points) {
-        const d = [];
-        for (let i = 0; i < points.length - 2; i += 2) {
-          const p0 = i === 0 ? [points[i], points[i + 1]] : [points[i - 2], points[i - 1]];
-          const p1 = [points[i], points[i + 1]];
-          const p2 = [points[i + 2], points[i + 3]];
-          const p3 = i + 4 < points.length ? [points[i + 4], points[i + 5]] : p2;
+      const backgroundArea = {
+        shape: "rect",
+        coords: [0, 0, 10000, 10000], // 매우 큰 영역
+        alt: "배경",
+        infoKey: null,
+      };
 
-          const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
-          const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
-          const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
-          const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      window.addEventListener("DOMContentLoaded", () => {
+        const img = document.getElementById("main-img");
+        const map = document.getElementById("img-map");
+        const panel = document.querySelector(".info-panel");
 
-          d.push([cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]]);
-        }
-        return d;
-      }
+        function renderMap() {
+          map.innerHTML = "";
 
-      function getSmoothPath(points) {
-        if (points.length < 6) return `M${points[0]},${points[1]} L${points.slice(2).join(",")} Z`;
+          // polygon 데이터 불러오기
+          fetch("static/net.json")
+            .then((res) => res.json())
+            .then((data) => {
+              data.forEach((polygon) => {
+                const coords = polygon.coords.split(",").map(Number);
+                const area = document.createElement("area");
+                area.shape = polygon.shape || "poly";
+                area.coords = coords.join(",");
+                area.alt = polygon.label || "폴리곤";
 
-        let d = `M${points[0]},${points[1]}`;
-        const beziers = catmullRomToBezier(points);
+                area.addEventListener("click", (e) => {
+                  e.preventDefault();
+                  openInfoPanel(infoMapData[polygon.label] || defaultInfo);
+                });
 
-        for (const [cp1x, cp1y, cp2x, cp2y, x, y] of beziers) {
-          d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${x},${y}`;
-        }
-        d += " Z";
-        return d;
-      }
-
-      fetch(jsonFilename)
-        .then((res) => res.json())
-        .then((data) => {
-          const img = document.getElementById("main-img");
-          const map = document.getElementById("img-map");
-          const svg = document.getElementById("highlight-svg");
-
-          function getSize() {
-            return { w: img.clientWidth, h: img.clientHeight };
-          }
-
-          function clearHighlight() {
-            while (svg.firstChild) svg.removeChild(svg.firstChild);
-          }
-
-          function drawHighlight(coords, shape) {
-            clearHighlight();
-            if (!coords.length) return;
-
-            if (shape === "rect") {
-              const [x1, y1, x2, y2] = coords;
-              const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-              rect.setAttribute("x", x1);
-              rect.setAttribute("y", y1);
-              rect.setAttribute("width", x2 - x1);
-              rect.setAttribute("height", y2 - y1);
-              rect.setAttribute("class", "highlight inner");
-              svg.appendChild(rect);
-            } else if (shape === "poly" || shape === "polygon") {
-              const d = getSmoothPath(coords);
-              const outer = document.createElementNS("http://www.w3.org/2000/svg", "path");
-              outer.setAttribute("d", d);
-              outer.setAttribute("class", "highlight outer");
-
-              const inner = document.createElementNS("http://www.w3.org/2000/svg", "path");
-              inner.setAttribute("d", d);
-              inner.setAttribute("class", "highlight inner");
-
-              svg.appendChild(outer);
-              svg.appendChild(inner);
-            }
-          }
-
-          function renderMap() {
-            map.innerHTML = "";
-            clearHighlight();
-
-            const { w, h } = getSize();
-
-            data.forEach((polygon) => {
-              const coords = polygon.coords.split(",").map(parseFloat);
-              const absCoords = coords.map((val, i) => (i % 2 === 0 ? Math.round(val * w) : Math.round(val * h)));
-
-              const area = document.createElement("area");
-              area.shape = polygon.shape || "poly";
-              area.coords = absCoords.join(",");
-              area.href = polygon.href || "#";
-              area.alt = polygon.label || "폴리곤 영역";
-              area.target = "_blank";
-
-              area.addEventListener("mouseenter", () => {
-                drawHighlight(absCoords, area.shape);
+                map.appendChild(area);
               });
-              area.addEventListener("mouseleave", clearHighlight);
 
-              map.appendChild(area);
-            });
-
-            hardcodedRects.forEach(({ coords, href, alt }) => {
-              const area = document.createElement("area");
-              area.shape = "rect";
-              area.coords = coords.join(",");
-              area.href = href;
-              area.alt = alt;
-              area.target = "_blank";
-
-              area.addEventListener("mouseenter", () => {
-                drawHighlight(coords, "rect");
+              // 사각형 정보
+              hardcodedRects.forEach(({ coords, alt, infoKey }) => {
+                const area = document.createElement("area");
+                area.shape = "rect";
+                area.coords = coords.join(",");
+                area.alt = alt;
+                area.addEventListener("click", (e) => {
+                  e.preventDefault();
+                  openInfoPanel(infoMapData[infoKey] || defaultInfo);
+                });
+                map.appendChild(area);
               });
-              area.addEventListener("mouseleave", clearHighlight);
 
-              map.appendChild(area);
+              // 마지막에 배경 삽입
+              const bgArea = document.createElement("area");
+              bgArea.shape = backgroundArea.shape;
+              bgArea.coords = backgroundArea.coords.join(",");
+              bgArea.alt = backgroundArea.alt;
+              bgArea.addEventListener("click", (e) => {
+                e.preventDefault();
+
+                // 사이드 패널 안쪽 클릭이면 무시
+                const x = e.clientX;
+                const y = e.clientY;
+                const rect = panel.getBoundingClientRect();
+
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                  return;
+                }
+
+                openInfoPanel(defaultInfo);
+              });
+              map.appendChild(bgArea);
             });
-          }
+        }
 
-          img.onload = renderMap;
-          if (img.complete) renderMap();
-          window.addEventListener("resize", renderMap);
-        })
-        .catch((err) => console.error("JSON 로드 실패:", err));
+        renderMap();
+      });
     </script>
   </body>
 </html>
