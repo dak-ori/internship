@@ -4,7 +4,7 @@ def mouse_callback(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(f"좌표: ({x}, {y})")
 
-img = cv2.imread('static/merry.jpg')
+img = cv2.imread('static/bottle.png')
 if img is None:
     print("Check Image_Path.")
     exit()
@@ -27,4 +27,7 @@ cv2.destroyAllWindows()
     4번째 남자 [405,235,510,600]
     5번째 여자 [540,300,669,755]
     윗공간 여백 [0,0,669,221]
+'''
+'''
+    소주병 [1260,630,1310,850]
 '''

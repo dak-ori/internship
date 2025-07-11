@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>자동 스케일 이미지맵 with 패널</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 20px;
+      }
+
+      .image-section {
+        position: relative;
+      }
+
+      #container {
+        position: relative;
+        display: inline-block;
+        max-width: 70vw;
+        max-height: 90vh;
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      area {
+        cursor: pointer;
+      }
+
+      .info-panel {
+        background: white;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        width: 360px;
+        min-height: 400px;
+      }
+
+      .panel-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .panel-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+      }
+
+      .panel-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .modal-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .modal-description {
+        color: #6b7280;
+        margin-top: 20px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="image-section">
+        <div id="container">
+          <img id="main-img" src="static/bottle.png" usemap="#map" alt="이미지" />
+        </div>
+        <map name="map" id="img-map">
+          <area id="target-box" shape="rect" coords="0,0,0,0" alt="소주병" />
+          <area id="rest-box" shape="rect" coords="0,0,0,0" alt="배경" />
+        </map>
+      </div>
+
+      <div id="info-panel" class="info-panel">
+        <div class="panel-header">
+          <h2 id="panel-title" class="modal-title">정보 패널</h2>
+          <button class="modal-close" onclick="closeInfoPanel()">×</button>
+        </div>
+        <div class="panel-content">
+          <div id="panel-placeholder" class="panel-placeholder">
+            <h3>정보를 확인하세요</h3>
+            <p>이미지의 영역을 클릭하면<br />상세 정보가 여기에 표시됩니다.</p>
+          </div>
+          <div id="panel-info" style="display: none">
+            <p id="panel-description" class="modal-description"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const originalSize = { width: 2560, height: 1409 };
+      const targetCoords = [1260, 630, 1310, 850];
+
+      function updateCoords() {
+        const img = document.getElementById("main-img");
+        const scaleX = img.clientWidth / originalSize.width;
+        const scaleY = img.clientHeight / originalSize.height;
+
+        const scaleCoord = (coords) => coords.map((val, idx) => Math.round(val * (idx % 2 === 0 ? scaleX : scaleY)));
+
+        const scaledTarget = scaleCoord(targetCoords);
+        const scaledBackground = scaleCoord([0, 0, originalSize.width, originalSize.height]);
+
+        document.getElementById("target-box").coords = scaledTarget.join(",");
+        document.getElementById("rest-box").coords = scaledBackground.join(",");
+      }
+
+      window.addEventListener("load", updateCoords);
+      window.addEventListener("resize", updateCoords);
+
+      const infoMapData = {
+        소주병: {
+          name: "소주병",
+          description: "선택된 사각형 영역입니다.",
+        },
+        배경: {
+          name: "배경 전체",
+          description: "소주병을 제외한 전체 이미지 영역입니다.",
+        },
+      };
+
+      function openInfoPanel(data) {
+        document.getElementById("panel-placeholder").style.display = "none";
+        document.getElementById("panel-info").style.display = "block";
+        document.getElementById("panel-title").textContent = data.name;
+        document.getElementById("panel-description").textContent = data.description;
+      }
+
+      function closeInfoPanel() {
+        document.getElementById("panel-placeholder").style.display = "flex";
+        document.getElementById("panel-info").style.display = "none";
+        document.getElementById("panel-title").textContent = "정보 패널";
+      }
+
+      document.querySelectorAll("area").forEach((area) => {
+        area.addEventListener("click", (e) => {
+          e.preventDefault();
+          const alt = area.getAttribute("alt");
+          const data = infoMapData[alt];
+          if (data) openInfoPanel(data);
+        });
+      });
+    </script>
+  </body>
+</html>

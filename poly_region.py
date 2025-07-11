@@ -12,7 +12,7 @@ def load_image(image_path):
     h, w = image.shape[:2]
     return image, (w, h)
 
-def predict_segmentation(model, image, classes=[0], imgsz=640, conf=0.4):
+def predict_segmentation(model, image, classes=[39], imgsz=640, conf=0.8):
     """YOLO 모델 세그멘테이션 예측"""
     results = model.predict(image, classes=classes, imgsz=imgsz, conf=conf)
     return results
@@ -54,10 +54,10 @@ def save_polygons_to_json(polygon_coords, json_path, label="person", base_size=(
 def main(image_path):
     model = YOLO("models/yolo11m-seg.pt")
     image, base_size = load_image(image_path)
-    results = predict_segmentation(model, image, classes=[0])
+    results = predict_segmentation(model, image, classes=[39])
     polygon_coords = extract_polygon_coordinates(results)
     image_with_polygons = draw_polygons(image, polygon_coords)
-
+    print(model.names)
     filename = os.path.splitext(os.path.basename(image_path))[0]
     save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
 
@@ -67,4 +67,4 @@ def main(image_path):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main("static/post.jpg")
+    main("static/bottle.png")
