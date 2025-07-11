@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Image Map with InfoModal</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8f9fa;
+        overflow-x: hidden;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: #f8f9fa;
+      }
+
+      .image-section {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #container {
+        position: relative;
+        display: inline-block;
+        max-width: 70vw;
+        max-height: 90vh;
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+      }
+
+      area {
+        cursor: pointer;
+      }
+
+      .highlight.outer {
+        fill: none;
+        stroke: magenta;
+        stroke-width: 8;
+        stroke-opacity: 0.3;
+        filter: blur(6px);
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+
+      .highlight.inner {
+        fill: none;
+        stroke: magenta;
+        stroke-width: 2;
+        filter: blur(1px);
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+
+      /* 정보 패널 */
+      .info-panel {
+        background: white;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 10;
+        margin-left: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        min-height: 400px;
+        align-self: flex-start;
+      }
+
+      .panel-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .panel-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        background: white;
+      }
+
+      .panel-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .panel-placeholder h3 {
+        margin: 16px 0 8px 0;
+        color: #374151;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-placeholder p {
+        font-size: 14px;
+        line-height: 1.6;
+        opacity: 0.8;
+      }
+
+      .modal-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: background 0.2s;
+      }
+
+      .modal-close:hover {
+        background: #f3f4f6;
+      }
+
+      .modal-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .modal-description {
+        color: #6b7280;
+        margin-bottom: 20px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .modal-details {
+        display: grid;
+        gap: 12px;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .detail-item:last-child {
+        border-bottom: none;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        color: #6b7280;
+        font-size: 14px;
+        text-align: right;
+        flex-shrink: 0;
+        margin-left: 16px;
+      }
+
+      .modal-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: #ddd6fe;
+        color: #7c3aed;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      /* 반응형 디자인 */
+      @media (max-width: 1024px) {
+        .info-panel {
+          width: 350px;
+          min-width: 300px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          flex-direction: column;
+        }
+
+        .image-section {
+          height: 60vh;
+          flex: none;
+        }
+
+        .info-panel {
+          width: 100%;
+          height: 40vh;
+          border-left: none;
+          border-top: 1px solid #e5e7eb;
+          box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #container {
+          max-width: 95%;
+          max-height: 85%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- 이미지 섹션 (왼쪽) -->
+      <div class="image-section">
+        <div id="container">
+          <img id="main-img" src="static/post.jpg" usemap="#map" alt="이미지맵" />
+          <svg id="highlight-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <map name="map" id="img-map"></map>
+      </div>
+
+      <!-- 정보 패널 (오른쪽) -->
+      <div id="info-panel" class="info-panel">
+        <div class="panel-header">
+          <div id="panel-badge" class="modal-badge" style="display: none"></div>
+          <h2 id="panel-title" class="modal-title">정보 패널</h2>
+          <button class="modal-close" onclick="closeInfoPanel()">×</button>
+        </div>
+
+        <div class="panel-content">
+          <div id="panel-placeholder" class="panel-placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            <h3>정보를 확인하세요</h3>
+            <p>이미지의 영역을 클릭하면<br />상세 정보가 여기에 표시됩니다.</p>
+          </div>
+
+          <div id="panel-info" style="display: none">
+            <img id="panel-image" class="modal-image" style="display: none" />
+            <p id="panel-description" class="modal-description"></p>
+            <div id="panel-details" class="modal-details"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const jsonFilename = "static/post.json";
+
+      // InfoMap 데이터
+      const infoMapData = {
+        넷플릭스: {
+          type: "서비스",
+          name: "넷플릭스",
+          description: "전 세계 최대 규모의 스트리밍 서비스 플랫폼입니다. 다양한 오리지널 콘텐츠와 영화, 드라마를 제공합니다.",
+          image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop",
+          details: {
+            카테고리: "OTT 플랫폼",
+            설립년도: "1997년",
+            "구독자 수": "2억 3천만명",
+            본사: "미국 캘리포니아",
+            "월 구독료": "5,500원~17,000원",
+            특징: "오리지널 콘텐츠 제작",
+          },
+        },
+        "폭삭 속았수다": {
+          type: "콘텐츠",
+          name: "폭삭 속았수다",
+          description: "넷플릭스 오리지널 한국 드라마 시리즈로 로맨틱 코미디 장르입니다.",
+          image: "https://images.unsplash.com/photo-1489599809969-bba13d8d2dc3?w=400&h=200&fit=crop",
+          details: {
+            장르: "로맨틱 코미디",
+            출연진: "김소현, 차은우",
+            방영년도: "2023년",
+            에피소드: "16부작",
+            평점: "8.2/10",
+            제작국가: "대한민국",
+          },
+        },
+      };
+
+      // 기본 정보
+      const defaultInfo = {
+        type: "정보",
+        name: "상세 정보",
+        description: "이 영역에 대한 추가 정보를 준비 중입니다.",
+        details: {
+          상태: "정보 준비중",
+          업데이트: "곧 제공 예정",
+        },
+      };
+
+      function openInfoPanel(areaData) {
+        const badge = document.getElementById("panel-badge");
+        const title = document.getElementById("panel-title");
+        const image = document.getElementById("panel-image");
+        const description = document.getElementById("panel-description");
+        const details = document.getElementById("panel-details");
+        const placeholder = document.getElementById("panel-placeholder");
+        const info = document.getElementById("panel-info");
+
+        // 데이터 설정
+        badge.textContent = areaData.type;
+        badge.style.display = "inline-flex";
+        title.textContent = areaData.name;
+        description.textContent = areaData.description;
+
+        // 이미지 설정
+        if (areaData.image) {
+          image.src = areaData.image;
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+
+        // 상세 정보 설정
+        details.innerHTML = "";
+        Object.entries(areaData.details).forEach(([key, value]) => {
+          const item = document.createElement("div");
+          item.className = "detail-item";
+          item.innerHTML = `
+            <span class="detail-label">${key}</span>
+            <span class="detail-value">${value}</span>
+          `;
+          details.appendChild(item);
+        });
+
+        // 패널 표시
+        placeholder.style.display = "none";
+        info.style.display = "block";
+      }
+
+      function closeInfoPanel() {
+        const placeholder = document.getElementById("panel-placeholder");
+        const info = document.getElementById("panel-info");
+        const badge = document.getElementById("panel-badge");
+        const title = document.getElementById("panel-title");
+
+        // 패널 초기화
+        placeholder.style.display = "flex";
+        info.style.display = "none";
+        badge.style.display = "none";
+        title.textContent = "정보 패널";
+      }
+
+      // 패널 크기를 이미지에 맞춤
+      function adjustPanelSize() {
+        const img = document.getElementById("main-img");
+        const panel = document.getElementById("info-panel");
+        const container = document.getElementById("container");
+
+        if (img && panel && container) {
+          // 이미지가 로드되었는지 확인
+          if (img.complete && img.naturalHeight > 0) {
+            const imgRect = img.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            console.log("Image height:", imgRect.height); // 디버깅용
+
+            // 패널 높이를 이미지 높이와 정확히 맞춤
+            panel.style.height = imgRect.height + "px";
+            panel.style.minHeight = imgRect.height + "px";
+            panel.style.maxHeight = imgRect.height + "px";
+
+            // 패널 너비를 화면 오른쪽 끝까지 확장
+            const mainContainer = document.querySelector(".main-container");
+            const mainContainerRect = mainContainer.getBoundingClientRect();
+            const rightSpace = window.innerWidth - (containerRect.right + 20);
+            const panelWidth = Math.max(300, rightSpace - 40);
+
+            panel.style.width = panelWidth + "px";
+            panel.style.minWidth = "300px";
+
+            console.log("Panel height set to:", imgRect.height); // 디버깅용
+            console.log("Panel width set to:", panelWidth); // 디버깅용
+          } else {
+            // 이미지가 아직 로드되지 않았으면 다시 시도
+            setTimeout(adjustPanelSize, 100);
+          }
+        }
+      }
+
+      // 이미지 로드 후 패널 크기 조정
+      function setupPanelResize() {
+        const img = document.getElementById("main-img");
+        const panel = document.getElementById("info-panel");
+
+        if (img && panel) {
+          // 리사이즈 이��트 처리
+          window.addEventListener("resize", () => {
+            setTimeout(adjustPanelSize, 50);
+          });
+
+          // 이미지 로드 완료 후 조정
+          if (img.complete && img.naturalHeight > 0) {
+            setTimeout(adjustPanelSize, 100);
+          } else {
+            img.addEventListener("load", () => {
+              setTimeout(adjustPanelSize, 100);
+            });
+          }
+
+          // 추가 안전장치 - 1초 후 한번 더 조정
+          setTimeout(adjustPanelSize, 1000);
+        }
+      }
+
+      // 하드코딩된 영역들
+      const hardcodedRects = [
+        {
+          coords: [320, 1355, 540, 1420],
+          alt: "넷플릭스",
+          infoKey: "넷플릭스",
+        },
+        {
+          coords: [180, 1175, 820, 1325],
+          alt: "폭삭 속았수다",
+          infoKey: "폭삭 속았수다",
+        },
+      ];
+
+      function catmullRomToBezier(points) {
+        const d = [];
+        for (let i = 0; i < points.length - 2; i += 2) {
+          const p0 = i === 0 ? [points[i], points[i + 1]] : [points[i - 2], points[i - 1]];
+          const p1 = [points[i], points[i + 1]];
+          const p2 = [points[i + 2], points[i + 3]];
+          const p3 = i + 4 < points.length ? [points[i + 4], points[i + 5]] : p2;
+
+          const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+          const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+          const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+          const cp2y = p2[1] + (p3[1] - p1[1]) / 6;
+
+          d.push([cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]]);
+        }
+        return d;
+      }
+
+      function getSmoothPath(points) {
+        if (points.length < 6) return `M${points[0]},${points[1]} L${points.slice(2).join(",")} Z`;
+
+        let d = `M${points[0]},${points[1]}`;
+        const beziers = catmullRomToBezier(points);
+
+        for (const [cp1x, cp1y, cp2x, cp2y, x, y] of beziers) {
+          d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${x},${y}`;
+        }
+        d += " Z";
+        return d;
+      }
+
+      fetch(jsonFilename)
+        .then((res) => res.json())
+        .then((data) => {
+          const img = document.getElementById("main-img");
+          const map = document.getElementById("img-map");
+          const svg = document.getElementById("highlight-svg");
+
+          function getSize() {
+            return { w: img.clientWidth, h: img.clientHeight };
+          }
+
+          function clearHighlight() {
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+          }
+
+          function drawHighlight(coords, shape) {}
+
+          function renderMap() {
+            map.innerHTML = "";
+            clearHighlight();
+
+            const { w, h } = getSize();
+
+            // JSON 다각형 영역 처리
+            data.forEach((polygon) => {
+              const coords = polygon.coords.split(",").map(parseFloat);
+              const absCoords = coords.map((val, i) => (i % 2 === 0 ? Math.round(val * w) : Math.round(val * h)));
+
+              const area = document.createElement("area");
+              area.shape = polygon.shape || "poly";
+              area.coords = absCoords.join(",");
+              area.alt = polygon.label || "폴리곤 영역";
+
+              area.addEventListener("click", (e) => {
+                e.preventDefault();
+                const infoData = infoMapData[polygon.label] || defaultInfo;
+                openInfoPanel(infoData);
+              });
+
+              map.appendChild(area);
+              drawHighlight(absCoords, area.shape);
+            });
+
+            // 하드코딩된 사각형 영역 처리
+            hardcodedRects.forEach(({ coords, alt, infoKey }) => {
+              const area = document.createElement("area");
+              area.shape = "rect";
+              area.coords = coords.join(",");
+              area.alt = alt;
+
+              area.addEventListener("click", (e) => {
+                e.preventDefault();
+                const infoData = infoMapData[infoKey] || defaultInfo;
+                openInfoPanel(infoData);
+              });
+
+              map.appendChild(area);
+              drawHighlight(coords, "rect");
+            });
+          }
+
+          function initializeMap() {
+            renderMap();
+            setupPanelResize();
+          }
+
+          img.onload = initializeMap;
+          if (img.complete) initializeMap();
+          window.addEventListener("resize", () => {
+            renderMap();
+            adjustPanelSize();
+          });
+        })
+        .catch((err) => console.error("JSON 로드 실패:", err));
+
+      // ESC 키로 패널 닫기
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeInfoPanel();
+        }
+      });
+
+      // 페이지 로드 후 패널 크기 초기 설정
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(setupPanelResize, 200);
+      });
+
+      // 윈도우 로드 후에도 한번 더 실행
+      window.addEventListener("load", () => {
+        setTimeout(adjustPanelSize, 300);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Image Map with Rect Info</title>
+    <style>
+      /* 스타일은 이전과 동일합니다 */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 20px;
+      }
+
+      .image-section {
+        position: relative;
+      }
+
+      #container {
+        position: relative;
+        display: inline-block;
+        max-width: 70vw;
+        max-height: 90vh;
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      area {
+        cursor: pointer;
+      }
+
+      .info-panel {
+        background: white;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        width: 360px;
+        min-height: 400px;
+      }
+
+      .panel-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .panel-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+      }
+
+      .panel-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .modal-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .modal-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .modal-description {
+        color: #6b7280;
+        margin-bottom: 20px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .modal-details {
+        display: grid;
+        gap: 12px;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #f3f4f6;
+        padding-bottom: 8px;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        color: #6b7280;
+        font-size: 14px;
+      }
+
+      .modal-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #ddd6fe;
+        color: #7c3aed;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="image-section">
+        <div id="container">
+          <img id="main-img" src="static/tree.jpg" usemap="#map" alt="이미지맵" />
+        </div>
+        <map name="map" id="img-map">
+          <area shape="rect" coords="185, 185, 535, 370" alt="사람" />
+          <area shape="rect" coords="0,0,2000,3000" alt="배경" />
+        </map>
+      </div>
+
+      <div id="info-panel" class="info-panel">
+        <div class="panel-header">
+          <span id="panel-badge" class="modal-badge" style="display: none"></span>
+          <h2 id="panel-title" class="modal-title">정보 패널</h2>
+          <button class="modal-close" onclick="closeInfoPanel()">×</button>
+        </div>
+        <div class="panel-content">
+          <div id="panel-placeholder" class="panel-placeholder">
+            <h3>정보를 확인하세요</h3>
+            <p>이미지의 영역을 클릭하면<br />상세 정보가 여기에 표시됩니다.</p>
+          </div>
+          <div id="panel-info" style="display: none">
+            <img id="panel-image" class="modal-image" style="display: none" />
+            <p id="panel-description" class="modal-description"></p>
+            <div id="panel-details" class="modal-details"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const infoMapData = {
+        사람: {
+          type: "참여 인원",
+          name: "배우",
+          description: "전 세계 최대 규모의 스트리밍 서비스 플랫폼입니다.",
+          image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400",
+          details: {
+            카테고리: "OTT 플랫폼",
+            설립년도: "1997년",
+            구독자: "2억 3천만명",
+          },
+        },
+        배경: {
+          type: "장소",
+          name: "이상한 변호사 우영우 드라마 촬영지 - 소덕동 팽나무",
+          description: "경상남도 창원시 의창구 대산면 북부리 105",
+          image: "",
+          details: {
+            구글지도: "https://maps.app.goo.gl/GFgcMFAgU8fuHWRG9",
+            출연진: "김소현, 차은우",
+            에피소드: "16부작",
+          },
+        },
+      };
+
+      function openInfoPanel(data) {
+        document.getElementById("panel-title").textContent = data.name;
+        document.getElementById("panel-description").textContent = data.description;
+        document.getElementById("panel-placeholder").style.display = "none";
+        document.getElementById("panel-info").style.display = "block";
+
+        const badge = document.getElementById("panel-badge");
+        badge.textContent = data.type;
+        badge.style.display = "inline-block";
+
+        const image = document.getElementById("panel-image");
+        if (data.image) {
+          image.src = data.image;
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+
+        const details = document.getElementById("panel-details");
+        details.innerHTML = "";
+        Object.entries(data.details).forEach(([key, val]) => {
+          const item = document.createElement("div");
+          item.className = "detail-item";
+          item.innerHTML = `<span class="detail-label">${key}</span><span class="detail-value">${val}</span>`;
+          details.appendChild(item);
+        });
+      }
+
+      function closeInfoPanel() {
+        document.getElementById("panel-placeholder").style.display = "flex";
+        document.getElementById("panel-info").style.display = "none";
+        document.getElementById("panel-badge").style.display = "none";
+        document.getElementById("panel-title").textContent = "정보 패널";
+      }
+
+      document.querySelectorAll("area").forEach((area) => {
+        area.addEventListener("click", (e) => {
+          e.preventDefault();
+          const alt = area.getAttribute("alt");
+          const data = infoMapData[alt];
+          if (data) openInfoPanel(data);
+        });
+      });
+    </script>
+  </body>
+</html>

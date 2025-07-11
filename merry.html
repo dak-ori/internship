@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Image Map with Rect Info</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 20px;
+      }
+
+      .image-section {
+        position: relative;
+      }
+
+      #container {
+        position: relative;
+        display: inline-block;
+        max-width: 70vw;
+        max-height: 90vh;
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      area {
+        cursor: pointer;
+      }
+
+      .info-panel {
+        background: white;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        width: 360px;
+        min-height: 400px;
+      }
+
+      .panel-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .panel-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+      }
+
+      .panel-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .modal-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .modal-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .modal-description {
+        color: #6b7280;
+        margin-bottom: 20px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .modal-details {
+        display: grid;
+        gap: 12px;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #f3f4f6;
+        padding-bottom: 8px;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        color: #6b7280;
+        font-size: 14px;
+      }
+
+      .modal-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #ddd6fe;
+        color: #7c3aed;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="image-section">
+        <div id="container">
+          <img id="main-img" src="static/merry.jpg" usemap="#map" alt="이미지맵" />
+        </div>
+        <map name="map" id="img-map">
+          <area shape="rect" coords="0,213,130,780" alt="1번째 남자" />
+          <area shape="rect" coords="150,265,265,790" alt="2번째 여자" />
+          <area shape="rect" coords="275,270,400,805" alt="3번째 여자" />
+          <area shape="rect" coords="405,235,510,600" alt="4번째 남자" />
+          <area shape="rect" coords="540,300,669,755" alt="5번째 여자" />
+          <area shape="rect" coords="0,0,669,221" alt="윗공간 여백" />
+        </map>
+      </div>
+
+      <div id="info-panel" class="info-panel">
+        <div class="panel-header">
+          <span id="panel-badge" class="modal-badge" style="display: none"></span>
+          <h2 id="panel-title" class="modal-title">정보 패널</h2>
+          <button class="modal-close" onclick="closeInfoPanel()">×</button>
+        </div>
+        <div class="panel-content">
+          <div id="panel-placeholder" class="panel-placeholder">
+            <h3>정보를 확인하세요</h3>
+            <p>이미지의 영역을 클릭하면<br />상세 정보가 여기에 표시됩니다.</p>
+          </div>
+          <div id="panel-info" style="display: none">
+            <img id="panel-image" class="modal-image" style="display: none" />
+            <p id="panel-description" class="modal-description"></p>
+            <div id="panel-details" class="modal-details"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const infoMapData = {
+        "1번째 남자": {
+          type: "인물",
+          name: "1번째 남자",
+          description: "첫 번째 위치에 있는 남성 인물입니다.",
+          image: "",
+          details: { 위치: "왼쪽 하단", 역할: "등장 인물 A" },
+        },
+        "2번째 여자": {
+          type: "인물",
+          name: "2번째 여자",
+          description: "두 번째 위치에 있는 여성 인물입니다.",
+          image: "",
+          details: { 위치: "왼쪽 중앙", 역할: "주요 인물 B" },
+        },
+        "3번째 여자": {
+          type: "인물",
+          name: "3번째 여자",
+          description: "세 번째 위치에 있는 여성 인물입니다.",
+          image: "",
+          details: { 위치: "중앙", 역할: "주요 인물 C" },
+        },
+        "4번째 남자": {
+          type: "인물",
+          name: "4번째 남자",
+          description: "네 번째 위치에 있는 남성 인물입니다.",
+          image: "",
+          details: { 위치: "중앙 우측", 역할: "등장 인물 D" },
+        },
+        "5번째 여자": {
+          type: "인물",
+          name: "5번째 여자",
+          description: "다섯 번째 위치에 있는 여성 인물입니다.",
+          image: "",
+          details: { 위치: "오른쪽", 역할: "등장 인물 E" },
+        },
+        "윗공간 여백": {
+          type: "공간",
+          name: "윗공간 여백",
+          description: "상단 여백 공간입니다.",
+          image: "",
+          details: { 용도: "디자인 여백", 비고: "별도 기능 없음" },
+        },
+      };
+
+      function openInfoPanel(data) {
+        document.getElementById("panel-title").textContent = data.name;
+        document.getElementById("panel-description").textContent = data.description;
+        document.getElementById("panel-placeholder").style.display = "none";
+        document.getElementById("panel-info").style.display = "block";
+
+        const badge = document.getElementById("panel-badge");
+        badge.textContent = data.type;
+        badge.style.display = "inline-block";
+
+        const image = document.getElementById("panel-image");
+        if (data.image) {
+          image.src = data.image;
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+
+        const details = document.getElementById("panel-details");
+        details.innerHTML = "";
+        Object.entries(data.details).forEach(([key, val]) => {
+          const item = document.createElement("div");
+          item.className = "detail-item";
+          item.innerHTML = `<span class="detail-label">${key}</span><span class="detail-value">${val}</span>`;
+          details.appendChild(item);
+        });
+      }
+
+      function closeInfoPanel() {
+        document.getElementById("panel-placeholder").style.display = "flex";
+        document.getElementById("panel-info").style.display = "none";
+        document.getElementById("panel-badge").style.display = "none";
+        document.getElementById("panel-title").textContent = "정보 패널";
+      }
+
+      document.querySelectorAll("area").forEach((area) => {
+        area.addEventListener("click", (e) => {
+          e.preventDefault();
+          const alt = area.getAttribute("alt");
+          const data = infoMapData[alt];
+          if (data) openInfoPanel(data);
+        });
+      });
+    </script>
+  </body>
+</html>

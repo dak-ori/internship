@@ -4,7 +4,7 @@ def mouse_callback(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(f"좌표: ({x}, {y})")
 
-img = cv2.imread('static/net.jpg')
+img = cv2.imread('static/merry.jpg')
 if img is None:
     print("Check Image_Path.")
     exit()
@@ -17,25 +17,14 @@ cv2.destroyAllWindows()
 
 
 '''
-넷플릭스 시리즈
-1 : 400, 1120
-2 : 400, 1160
-3 : 600, 1160
-4 : 600, 1120
+    merry.jpg
+    사람 있는 부분 [185, 185, 535, 370]
 '''
-
 '''
-NetFlix
-1 : 320,1355
-2 : 320,1420
-3 : 540,1420
-4 : 540,1355 
-'''
-
-'''
-폭삭 속았수다
-1 : 180, 1175
-2 : 180, 1325
-3 : 820, 1325
-4 : 820, 1175
+    1번째 남자 [0,213,130,780]
+    2번째 여자 [150,265,265,790]
+    3번째 여자 [275,270,400,805]
+    4번째 남자 [405,235,510,600]
+    5번째 여자 [540,300,669,755]
+    윗공간 여백 [0,0,669,221]
 '''

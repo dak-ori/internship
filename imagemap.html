@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>Web Image Map with Background</title>
+    <title>Web Image Map with Info</title>
     <style>
       * {
         margin: 0;
@@ -53,7 +53,7 @@
         border: 1px solid #e5e7eb;
         border-radius: 12px;
         padding: 24px;
-        width: 350px;
+        width: 360px;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         position: sticky;
         top: 20px;
@@ -67,20 +67,20 @@
         color: #7c3aed;
         padding: 6px 12px;
         border-radius: 20px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: bold;
         margin-bottom: 12px;
       }
 
       .modal-title {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: bold;
-        margin: 0 0 12px 0;
+        margin-bottom: 12px;
       }
 
       .modal-image {
         width: 100%;
-        height: 180px;
+        height: 200px;
         object-fit: cover;
         border-radius: 10px;
         margin-bottom: 16px;
@@ -88,21 +88,21 @@
       }
 
       .modal-description {
-        font-size: 14px;
+        font-size: 16px;
         color: #444;
         margin-bottom: 16px;
         line-height: 1.6;
       }
 
       .modal-details {
-        font-size: 14px;
+        font-size: 15px;
         color: #333;
       }
 
       .detail-item {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         border-bottom: 1px solid #eee;
         padding-bottom: 6px;
       }
@@ -124,7 +124,7 @@
       <!-- 왼쪽 이미지 섹션 -->
       <div class="image-section">
         <div id="container">
-          <img id="main-img" src="static/net.jpg" usemap="#map" alt="이미지맵" />
+          <img id="main-img" src="/static/net.jpg" usemap="#map" alt="이미지맵" />
           <map name="map" id="img-map"></map>
         </div>
       </div>
@@ -169,17 +169,47 @@
             제작국가: "대한민국",
           },
         },
+        bogum: {
+          type: "사람",
+          name: "박보검",
+          description: "배우",
+          image: "/static/bogum.png",
+          details: {
+            국적: "대한민국",
+            소속사: "THEBLACKLABEL",
+            생년월일: "1993년 06월 16일",
+            대표작: "응답하라 1988, 구르미 그린 달빛",
+          },
+        },
+        iu: {
+          type: "사람",
+          name: "아이유",
+          description: "가수이자 배우",
+          image: "/static/iu.jpg",
+          details: {
+            국적: "대한민국",
+            소속사: "이담엔터테인먼트",
+            생년월일: "1993년 05월 16일",
+            대표작: "호텔델루나, 최고다 이순신",
+            대표앨범: "Palette, LILAC, 조각집",
+          },
+        },
       };
 
       const defaultInfo = {
-        type: "정보",
-        name: "전체 배경",
-        description: "이미지의 배경입니다. 선택된 영역 외의 배경 정보입니다.",
+        type: "장소",
+        name: "고창 학원농장 유채꽃밭",
+        description: "전라북도 고창군 공음면 학원길 20",
         details: {
-          설명: "전체 이미지 배경입니다.",
-          상태: "일반 배경",
+          설명: "유채꽃과 청보리밭이 어우러져 아름다운 풍경을 자랑하는 명소",
+          즐길거리: "매년 4~5월에 고창에서 청보리밭축제가 열립니다.",
         },
       };
+
+      const hardcodedRects = [
+        { coords: [320, 1355, 540, 1420], alt: "넷플릭스", infoKey: "넷플릭스" },
+        { coords: [180, 1175, 820, 1325], alt: "폭삭 속았수다", infoKey: "폭삭 속았수다" },
+      ];
 
       function openInfoPanel(areaData) {
         const badge = document.getElementById("panel-badge");
@@ -212,54 +242,35 @@
         });
       }
 
-      const hardcodedRects = [
-        {
-          coords: [320, 1355, 540, 1420],
-          alt: "넷플릭스",
-          infoKey: "넷플릭스",
-        },
-        {
-          coords: [180, 1175, 820, 1325],
-          alt: "폭삭 속았수다",
-          infoKey: "폭삭 속았수다",
-        },
-      ];
-
-      const backgroundArea = {
-        shape: "rect",
-        coords: [0, 0, 10000, 10000], // 매우 큰 영역
-        alt: "배경",
-        infoKey: null,
-      };
-
       window.addEventListener("DOMContentLoaded", () => {
-        const img = document.getElementById("main-img");
         const map = document.getElementById("img-map");
-        const panel = document.querySelector(".info-panel");
 
         function renderMap() {
           map.innerHTML = "";
 
-          // polygon 데이터 불러오기
-          fetch("static/net.json")
-            .then((res) => res.json())
-            .then((data) => {
-              data.forEach((polygon) => {
+          fetch("/static/net.json")
+            .then((res) => {
+              console.log("fetch response status:", res.status);
+              return res.json();
+            })
+            .then((polygons) => {
+              console.log("폴리곤 데이터:", polygons);
+
+              // 1. 폴리곤 영역 먼저 추가 (1순위)
+              polygons.forEach((polygon) => {
                 const coords = polygon.coords.split(",").map(Number);
                 const area = document.createElement("area");
                 area.shape = polygon.shape || "poly";
                 area.coords = coords.join(",");
                 area.alt = polygon.label || "폴리곤";
-
                 area.addEventListener("click", (e) => {
                   e.preventDefault();
                   openInfoPanel(infoMapData[polygon.label] || defaultInfo);
                 });
-
                 map.appendChild(area);
               });
 
-              // 사각형 정보
+              // 2. 사각형 영역 다음 추가 (2순위)
               hardcodedRects.forEach(({ coords, alt, infoKey }) => {
                 const area = document.createElement("area");
                 area.shape = "rect";
@@ -272,26 +283,19 @@
                 map.appendChild(area);
               });
 
-              // 마지막에 배경 삽입
+              // 3. 배경 영역 마지막에 추가 (마지막 우선순위)
               const bgArea = document.createElement("area");
-              bgArea.shape = backgroundArea.shape;
-              bgArea.coords = backgroundArea.coords.join(",");
-              bgArea.alt = backgroundArea.alt;
+              bgArea.shape = "rect";
+              bgArea.coords = "0,0,10000,10000";
+              bgArea.alt = "배경";
               bgArea.addEventListener("click", (e) => {
                 e.preventDefault();
-
-                // 사이드 패널 안쪽 클릭이면 무시
-                const x = e.clientX;
-                const y = e.clientY;
-                const rect = panel.getBoundingClientRect();
-
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                  return;
-                }
-
                 openInfoPanel(defaultInfo);
               });
               map.appendChild(bgArea);
+            })
+            .catch((error) => {
+              console.error("fetch error:", error);
             });
         }
 

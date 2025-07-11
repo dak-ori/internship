@@ -10,11 +10,11 @@ def load_image(image_path):
     if image is None:
         raise FileNotFoundError(f"이미지를 열 수 없습니다: {image_path}")
     h, w = image.shape[:2]
-    return image, (w, h)  # (width, height)
+    return image, (w, h)
 
 def predict_segmentation(model, image, classes=[0], imgsz=640, conf=0.4):
     """YOLO 모델 세그멘테이션 예측"""
-    results = model.predict(image, classes=classes, imgsz=imgsz,conf=conf)
+    results = model.predict(image, classes=classes, imgsz=imgsz, conf=conf)
     return results
 
 def extract_polygon_coordinates(results):
@@ -61,5 +61,10 @@ def main(image_path):
     filename = os.path.splitext(os.path.basename(image_path))[0]
     save_polygons_to_json(polygon_coords, f"{filename}.json", base_size=base_size)
 
+    # 👉 결과 이미지 OpenCV 창으로 출력
+    cv2.imshow("Polygon Segmentation Result", image_with_polygons)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 if __name__ == "__main__":
-    main("static/kimbap.png")
+    main("static/post.jpg")
