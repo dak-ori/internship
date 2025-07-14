@@ -190,6 +190,47 @@
         margin-bottom: 12px;
       }
 
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .action-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        background: #7c3aed;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .action-button svg {
+        margin-left: 8px;
+      }
+
+      .action-button:hover {
+        background: #6f2c91;
+      }
+
+      /* 하이라이트 스타일 */
+      #highlight-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+      }
+
       @media (max-width: 768px) {
         .main-container {
           flex-direction: column;
@@ -210,6 +251,7 @@
       <div class="image-section">
         <div id="container">
           <img id="main-img" src="static/post.jpg" usemap="#map" alt="이미지맵" />
+          <svg id="highlight-svg"></svg>
         </div>
         <map name="map" id="img-map"></map>
       </div>
@@ -237,6 +279,68 @@
 
     <script>
       const jsonFilename = "static/post.json";
+      let currentHighlightCoords = null;
+
+      // 하이라이트 표시 함수
+      function showHighlight(coords, isBackground = false) {
+        currentHighlightCoords = coords;
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.innerHTML = "";
+
+        const img = document.getElementById("main-img");
+        const w = img.clientWidth;
+        const h = img.clientHeight;
+
+        // 배경 영역이면 전체 이미지 크기로 설정된 사각형을 그립니다
+        if (isBackground) {
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("x", 0);
+          rect.setAttribute("y", 0);
+          rect.setAttribute("width", w);
+          rect.setAttribute("height", h);
+          rect.setAttribute("fill", "rgba(124,58,237,0.15)");
+          rect.setAttribute("stroke", "#7c3aed");
+          rect.setAttribute("stroke-width", "4");
+          rect.setAttribute("rx", "12");
+          highlightSvg.appendChild(rect);
+          return;
+        }
+
+        // coords가 배열이 아니면 배열로 변환
+        const coordsArray = Array.isArray(coords) ? coords : coords.split(",").map(Number);
+
+        // 좌표가 4개면 사각형, 그 이상이면 폴리곤으로 처리
+        if (coordsArray.length === 4) {
+          // 사각형 그리기
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("x", coordsArray[0]);
+          rect.setAttribute("y", coordsArray[1]);
+          rect.setAttribute("width", coordsArray[2] - coordsArray[0]);
+          rect.setAttribute("height", coordsArray[3] - coordsArray[1]);
+          rect.setAttribute("fill", "rgba(124,58,237,0.15)");
+          rect.setAttribute("stroke", "#7c3aed");
+          rect.setAttribute("stroke-width", "4");
+          rect.setAttribute("rx", "12");
+          highlightSvg.appendChild(rect);
+        } else {
+          // 폴리곤 그리기
+          const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          const points = [];
+          for (let i = 0; i < coordsArray.length; i += 2) {
+            points.push(`${coordsArray[i]},${coordsArray[i + 1]}`);
+          }
+          polygon.setAttribute("points", points.join(" "));
+          polygon.setAttribute("fill", "rgba(124,58,237,0.15)");
+          polygon.setAttribute("stroke", "#7c3aed");
+          polygon.setAttribute("stroke-width", "4");
+          highlightSvg.appendChild(polygon);
+        }
+      }
+
+      function hideHighlight() {
+        document.getElementById("highlight-svg").innerHTML = "";
+        currentHighlightCoords = null;
+      }
 
       const infoMapData = {
         넷플릭스: {
@@ -250,6 +354,18 @@
             구독자수: "2억 3천만명",
             본사: "미국 캘리포니아",
           },
+          actions: [
+            {
+              text: "공식 사이트 방문",
+              url: "https://www.netflix.com",
+              icon: "M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25",
+            },
+            {
+              text: "멤버십 정보",
+              url: "https://www.netflix.com/signup",
+              icon: "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z",
+            },
+          ],
         },
         "폭삭 속았수다": {
           type: "콘텐츠",
@@ -262,6 +378,13 @@
             방영년도: "2023년",
             에피소드: "16부작",
           },
+          actions: [
+            {
+              text: "시청하기",
+              url: "https://www.netflix.com/watch",
+              icon: "M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347c-.75.412-1.667-.13-1.667-.986V5.653z",
+            },
+          ],
         },
         "공통 영역": {
           type: "전체",
@@ -272,6 +395,13 @@
             용도: "배경 클릭",
             설명: "전체 이미지에서 다른 영역을 클릭하면 이 정보가 나타납니다.",
           },
+          actions: [
+            {
+              text: "전체 정보 보기",
+              url: "https://www.netflix.com/browse",
+              icon: "M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z",
+            },
+          ],
         },
       };
 
@@ -323,6 +453,28 @@
           details.appendChild(div);
         }
 
+        // 액션 버튼 그룹 추가
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+        buttonGroup.id = "action-buttons";
+
+        if (data.actions) {
+          data.actions.forEach((action) => {
+            const button = document.createElement("a");
+            button.href = action.url;
+            button.className = "action-button";
+            button.target = "_blank";
+            button.innerHTML = `
+              ${action.text}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="${action.icon}"></path>
+              </svg>
+            `;
+            buttonGroup.appendChild(button);
+          });
+        }
+
+        document.getElementById("panel-info").appendChild(buttonGroup);
         document.getElementById("panel-placeholder").style.display = "none";
         document.getElementById("panel-info").style.display = "block";
       }
@@ -332,6 +484,22 @@
         document.getElementById("panel-info").style.display = "none";
         document.getElementById("panel-badge").style.display = "none";
         document.getElementById("panel-title").textContent = "정보 패널";
+        const buttonGroup = document.getElementById("action-buttons");
+        if (buttonGroup) buttonGroup.remove();
+      }
+
+      // 이미지 리사이즈/로드 시 하이라이트 SVG 크기 동기화
+      function syncSvgSize() {
+        const img = document.getElementById("main-img");
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.setAttribute("width", img.clientWidth);
+        highlightSvg.setAttribute("height", img.clientHeight);
+        highlightSvg.style.width = img.clientWidth + "px";
+        highlightSvg.style.height = img.clientHeight + "px";
+        // 리사이즈 시 하이라이트가 남아있으면 갱신
+        if (currentHighlightCoords) {
+          showHighlight(currentHighlightCoords);
+        }
       }
 
       fetch(jsonFilename)
@@ -358,6 +526,10 @@
                 const info = infoMapData[polygon.label] || defaultInfo;
                 openInfoPanel(info);
               });
+              area.addEventListener("mouseenter", () => {
+                showHighlight(absCoords, false);
+              });
+              area.addEventListener("mouseleave", hideHighlight);
               map.appendChild(area);
             });
 
@@ -372,6 +544,10 @@
                 const info = infoMapData[infoKey] || defaultInfo;
                 openInfoPanel(info);
               });
+              area.addEventListener("mouseenter", () => {
+                showHighlight(coords, false);
+              });
+              area.addEventListener("mouseleave", hideHighlight);
               map.appendChild(area);
             });
 
@@ -384,6 +560,10 @@
               e.preventDefault();
               openInfoPanel(infoMapData["공통 영역"] || defaultInfo);
             });
+            fullArea.addEventListener("mouseenter", () => {
+              showHighlight([0, 0, w, h], true);
+            });
+            fullArea.addEventListener("mouseleave", hideHighlight);
             map.appendChild(fullArea);
           }
 
@@ -392,6 +572,10 @@
           window.addEventListener("resize", renderMap);
         })
         .catch((err) => console.error("JSON 로딩 실패:", err));
+
+      document.getElementById("main-img").addEventListener("load", syncSvgSize);
+      window.addEventListener("resize", syncSvgSize);
+      syncSvgSize();
 
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeInfoPanel();
