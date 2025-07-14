@@ -281,60 +281,59 @@
       const jsonFilename = "static/post.json";
       let currentHighlightCoords = null;
 
-      // 하이라이트 표시 함수
+      // 원본 이미지 크기 (post.jpg의 실제 크기로 설정)
+      const originalSize = { width: 1080, height: 1920 };
+
+      // 하이라이트 표시 함수 (스케일된 좌표 사용)
       function showHighlight(coords, isBackground = false) {
         currentHighlightCoords = coords;
         const highlightSvg = document.getElementById("highlight-svg");
         highlightSvg.innerHTML = "";
 
         const img = document.getElementById("main-img");
-        const w = img.clientWidth;
-        const h = img.clientHeight;
 
-        // 배경 영역이면 전체 이미지 크기로 설정된 사각형을 그립니다
+        // coords는 이미 스케일된 좌표이므로 그대로 사용
+        const arr = Array.isArray(coords) ? coords : coords.split(",").map(Number);
+
+        let x, y, w, h;
         if (isBackground) {
-          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-          rect.setAttribute("x", 0);
-          rect.setAttribute("y", 0);
-          rect.setAttribute("width", w);
-          rect.setAttribute("height", h);
-          rect.setAttribute("fill", "rgba(124,58,237,0.15)");
-          rect.setAttribute("stroke", "#7c3aed");
-          rect.setAttribute("stroke-width", "4");
-          rect.setAttribute("rx", "12");
-          highlightSvg.appendChild(rect);
-          return;
-        }
-
-        // coords가 배열이 아니면 배열로 변환
-        const coordsArray = Array.isArray(coords) ? coords : coords.split(",").map(Number);
-
-        // 좌표가 4개면 사각형, 그 이상이면 폴리곤으로 처리
-        if (coordsArray.length === 4) {
-          // 사각형 그리기
-          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-          rect.setAttribute("x", coordsArray[0]);
-          rect.setAttribute("y", coordsArray[1]);
-          rect.setAttribute("width", coordsArray[2] - coordsArray[0]);
-          rect.setAttribute("height", coordsArray[3] - coordsArray[1]);
-          rect.setAttribute("fill", "rgba(124,58,237,0.15)");
-          rect.setAttribute("stroke", "#7c3aed");
-          rect.setAttribute("stroke-width", "4");
-          rect.setAttribute("rx", "12");
-          highlightSvg.appendChild(rect);
+          x = 0;
+          y = 0;
+          w = img.clientWidth;
+          h = img.clientHeight;
         } else {
-          // 폴리곤 그리기
-          const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-          const points = [];
-          for (let i = 0; i < coordsArray.length; i += 2) {
-            points.push(`${coordsArray[i]},${coordsArray[i + 1]}`);
+          if (arr.length === 4) {
+            // 사각형
+            x = arr[0];
+            y = arr[1];
+            w = arr[2] - arr[0];
+            h = arr[3] - arr[1];
+          } else {
+            // 폴리곤은 기존 방식 유지
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            const points = [];
+            for (let i = 0; i < arr.length; i += 2) {
+              points.push(`${arr[i]},${arr[i + 1]}`);
+            }
+            polygon.setAttribute("points", points.join(" "));
+            polygon.setAttribute("fill", "rgba(124,58,237,0.15)");
+            polygon.setAttribute("stroke", "#7c3aed");
+            polygon.setAttribute("stroke-width", "4");
+            highlightSvg.appendChild(polygon);
+            return;
           }
-          polygon.setAttribute("points", points.join(" "));
-          polygon.setAttribute("fill", "rgba(124,58,237,0.15)");
-          polygon.setAttribute("stroke", "#7c3aed");
-          polygon.setAttribute("stroke-width", "4");
-          highlightSvg.appendChild(polygon);
         }
+
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", w);
+        rect.setAttribute("height", h);
+        rect.setAttribute("fill", "rgba(124,58,237,0.15)");
+        rect.setAttribute("stroke", "#7c3aed");
+        rect.setAttribute("stroke-width", "4");
+        rect.setAttribute("rx", "12");
+        highlightSvg.appendChild(rect);
       }
 
       function hideHighlight() {
@@ -347,6 +346,7 @@
           type: "서비스",
           name: "넷플릭스",
           description: "전 세계 최대 규모의 스트리밍 플랫폼입니다.",
+          linksetUrl: "https://id.oliot.org/01/88000269314144?linktype=linkset",
           image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop",
           details: {
             카테고리: "OTT 플랫폼",
@@ -371,6 +371,7 @@
           type: "콘텐츠",
           name: "폭삭 속았수다",
           description: "넷플릭스 오리지널 로맨틱 코미디 드라마.",
+          linksetUrl: "https://id.oliot.org/01/88000269314144?linktype=linkset",
           image: "https://images.unsplash.com/photo-1489599809969-bba13d8d2dc3?w=400&h=200&fit=crop",
           details: {
             장르: "로맨틱 코미디",
@@ -390,6 +391,7 @@
           type: "전체",
           name: "전체 이미지",
           description: "지정된 영역 외의 공통 영역입니다.",
+          linksetUrl: "https://id.oliot.org/01/88000269314144?linktype=linkset",
           image: "https://images.unsplash.com/photo-1495563381401-ecfbcaaa67e8?w=400&h=200&fit=crop",
           details: {
             용도: "배경 클릭",
@@ -417,12 +419,12 @@
 
       const hardcodedRects = [
         {
-          coords: [320, 1355, 540, 1420],
+          coords: [350, 1755, 570, 1840],
           alt: "넷플릭스",
           infoKey: "넷플릭스",
         },
         {
-          coords: [180, 1175, 820, 1325],
+          coords: [200, 1545, 870, 1698],
           alt: "폭삭 속았수다",
           infoKey: "폭삭 속았수다",
         },
@@ -453,11 +455,16 @@
           details.appendChild(div);
         }
 
-        // 액션 버튼 그룹 추가
+        // 기존 액션 버튼 그룹 제거
+        const oldButtonGroup = document.getElementById("action-buttons");
+        if (oldButtonGroup) oldButtonGroup.remove();
+
+        // 새 액션 버튼 그룹 생성
         const buttonGroup = document.createElement("div");
         buttonGroup.className = "button-group";
         buttonGroup.id = "action-buttons";
 
+        // 기존 정적 버튼 생성
         if (data.actions) {
           data.actions.forEach((action) => {
             const button = document.createElement("a");
@@ -475,6 +482,47 @@
         }
 
         document.getElementById("panel-info").appendChild(buttonGroup);
+
+        // 링크셋 데이터 가져오기 (동적 버튼 생성)
+        if (data.linksetUrl) {
+          console.log("링크셋 URL 요청 시작:", data.linksetUrl);
+          const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(data.linksetUrl);
+          fetch(proxyUrl)
+            .then((res) => {
+              console.log("응답 상태:", res.status, res.statusText);
+              if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+              return res.json();
+            })
+            .then((json) => {
+              console.log("받은 링크셋 데이터:", json);
+              const links = json?.links || [];
+              console.log("추출된 링크들:", links);
+
+              if (links.length > 0) {
+                links.forEach((link, index) => {
+                  console.log(`링크 ${index + 1}:`, link);
+                  const btn = document.createElement("a");
+                  btn.href = link.targetURL || "#";
+                  btn.className = "action-button";
+                  btn.target = "_blank";
+                  btn.innerHTML = `
+                    ${link.title || `관련 링크 ${index + 1}`}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"></path>
+                    </svg>
+                  `;
+                  buttonGroup.appendChild(btn);
+                });
+              } else {
+                console.log("링크셋 아이템이 없습니다.");
+              }
+            })
+            .catch((err) => {
+              console.error("링크셋 로딩 실패:", err);
+              console.error("에러 상세:", err.message);
+            });
+        }
+
         document.getElementById("panel-placeholder").style.display = "none";
         document.getElementById("panel-info").style.display = "block";
       }
@@ -488,7 +536,7 @@
         if (buttonGroup) buttonGroup.remove();
       }
 
-      // 이미지 리사이즈/로드 시 하이라이트 SVG 크기 동기화
+      // 이미지 리사이즈/로드 시 하이라이트 SVG 크기 동기화 및 좌표 업데이트
       function syncSvgSize() {
         const img = document.getElementById("main-img");
         const highlightSvg = document.getElementById("highlight-svg");
@@ -496,10 +544,43 @@
         highlightSvg.setAttribute("height", img.clientHeight);
         highlightSvg.style.width = img.clientWidth + "px";
         highlightSvg.style.height = img.clientHeight + "px";
+
+        // 이미지맵 좌표 업데이트
+        updateImageMapCoords();
+
         // 리사이즈 시 하이라이트가 남아있으면 갱신
         if (currentHighlightCoords) {
           showHighlight(currentHighlightCoords);
         }
+      }
+
+      function updateImageMapCoords() {
+        const img = document.getElementById("main-img");
+        const scaleX = img.clientWidth / originalSize.width;
+        const scaleY = img.clientHeight / originalSize.height;
+
+        // 각 area의 좌표를 현재 이미지 크기에 맞게 업데이트
+        document.querySelectorAll("area").forEach((area) => {
+          const alt = area.getAttribute("alt");
+
+          // 하드코딩된 사각형 처리 - hardcodedRects에서 좌표 찾기
+          const rectData = hardcodedRects.find((rect) => rect.alt === alt);
+          if (rectData) {
+            const coords = rectData.coords;
+            const scaledCoords = [
+              Math.round(coords[0] * scaleX),
+              Math.round(coords[1] * scaleY),
+              Math.round(coords[2] * scaleX),
+              Math.round(coords[3] * scaleY),
+            ];
+            area.setAttribute("coords", scaledCoords.join(","));
+          }
+
+          // 전체 영역 처리
+          if (alt === "공통 영역") {
+            area.setAttribute("coords", `0,0,${img.clientWidth},${img.clientHeight}`);
+          }
+        });
       }
 
       fetch(jsonFilename)
@@ -535,9 +616,20 @@
 
             // 하드코딩된 사각형
             hardcodedRects.forEach(({ coords, alt, infoKey }) => {
+              const scaleX = w / originalSize.width;
+              const scaleY = h / originalSize.height;
+
+              // 원본 좌표를 현재 이미지 크기에 맞게 스케일링
+              const scaledCoords = [
+                Math.round(coords[0] * scaleX),
+                Math.round(coords[1] * scaleY),
+                Math.round(coords[2] * scaleX),
+                Math.round(coords[3] * scaleY),
+              ];
+
               const area = document.createElement("area");
               area.shape = "rect";
-              area.coords = coords.join(",");
+              area.coords = scaledCoords.join(",");
               area.alt = alt;
               area.addEventListener("click", (e) => {
                 e.preventDefault();
@@ -545,7 +637,7 @@
                 openInfoPanel(info);
               });
               area.addEventListener("mouseenter", () => {
-                showHighlight(coords, false);
+                showHighlight(scaledCoords, false);
               });
               area.addEventListener("mouseleave", hideHighlight);
               map.appendChild(area);
