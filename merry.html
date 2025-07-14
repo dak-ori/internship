@@ -145,21 +145,57 @@
         font-weight: 600;
         margin-bottom: 12px;
       }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .action-button:hover {
+        background-color: #7c3aed;
+        border-color: #7c3aed;
+        color: white;
+      }
+
+      .action-button svg {
+        width: 20px;
+        height: 20px;
+        margin-left: 8px;
+      }
     </style>
   </head>
   <body>
     <div class="main-container">
       <div class="image-section">
         <div id="container">
-          <img id="main-img" src="static/merry.jpg" usemap="#map" alt="이미지맵" />
+          <img id="main-img" src="static/merry.png" usemap="#map" alt="이미지맵" />
+          <svg id="highlight-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2"></svg>
         </div>
         <map name="map" id="img-map">
-          <area shape="rect" coords="0,213,130,780" alt="1번째 남자" />
-          <area shape="rect" coords="150,265,265,790" alt="2번째 여자" />
-          <area shape="rect" coords="275,270,400,805" alt="3번째 여자" />
-          <area shape="rect" coords="405,235,510,600" alt="4번째 남자" />
-          <area shape="rect" coords="540,300,669,755" alt="5번째 여자" />
-          <area shape="rect" coords="0,0,669,221" alt="윗공간 여백" />
+          <area shape="rect" coords="0,330,230,1676" alt="1번째 남자" />
+          <area shape="rect" coords="231,450,445,1676" alt="2번째 여자" />
+          <area shape="rect" coords="446,450,650,1676" alt="3번째 여자" />
+          <area shape="rect" coords="651,400,860,1676" alt="4번째 남자" />
+          <area shape="rect" coords="861,530,1338,1676" alt="5번째 여자" />
+          <area id="rest-box" shape="rect" coords="0,0,1338,1676" alt="배경" />
         </map>
       </div>
 
@@ -178,10 +214,20 @@
             <img id="panel-image" class="modal-image" style="display: none" />
             <p id="panel-description" class="modal-description"></p>
             <div id="panel-details" class="modal-details"></div>
+            <div class="button-group" id="action-buttons"></div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- SVG 아이콘 정의 -->
+    <svg style="display: none">
+      <defs>
+        <symbol id="icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d=""></path>
+        </symbol>
+      </defs>
+    </svg>
 
     <script>
       const infoMapData = {
@@ -191,6 +237,13 @@
           description: "첫 번째 위치에 있는 남성 인물입니다.",
           image: "",
           details: { 위치: "왼쪽 하단", 역할: "등장 인물 A" },
+          actions: [
+            {
+              text: "인물 정보 보기",
+              url: "https://example.com/character1",
+              icon: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
+            },
+          ],
         },
         "2번째 여자": {
           type: "인물",
@@ -198,6 +251,13 @@
           description: "두 번째 위치에 있는 여성 인물입니다.",
           image: "",
           details: { 위치: "왼쪽 중앙", 역할: "주요 인물 B" },
+          actions: [
+            {
+              text: "인물 정보 보기",
+              url: "https://example.com/character2",
+              icon: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
+            },
+          ],
         },
         "3번째 여자": {
           type: "인물",
@@ -205,6 +265,13 @@
           description: "세 번째 위치에 있는 여성 인물입니다.",
           image: "",
           details: { 위치: "중앙", 역할: "주요 인물 C" },
+          actions: [
+            {
+              text: "인물 정보 보기",
+              url: "https://example.com/character3",
+              icon: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
+            },
+          ],
         },
         "4번째 남자": {
           type: "인물",
@@ -212,6 +279,13 @@
           description: "네 번째 위치에 있는 남성 인물입니다.",
           image: "",
           details: { 위치: "중앙 우측", 역할: "등장 인물 D" },
+          actions: [
+            {
+              text: "인물 정보 보기",
+              url: "https://example.com/character4",
+              icon: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
+            },
+          ],
         },
         "5번째 여자": {
           type: "인물",
@@ -219,13 +293,32 @@
           description: "다섯 번째 위치에 있는 여성 인물입니다.",
           image: "",
           details: { 위치: "오른쪽", 역할: "등장 인물 E" },
+          actions: [
+            {
+              text: "인물 정보 보기",
+              url: "https://example.com/character5",
+              icon: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
+            },
+          ],
         },
-        "윗공간 여백": {
-          type: "공간",
-          name: "윗공간 여백",
-          description: "상단 여백 공간입니다.",
+        배경: {
+          type: "배경",
+          name: "전체 장면",
+          description: "메리 크리스마스 이미지의 전체 장면입니다.",
           image: "",
-          details: { 용도: "디자인 여백", 비고: "별도 기능 없음" },
+          details: { 장소: "크리스마스 장면", 시간: "저녁" },
+          actions: [
+            {
+              text: "전체 이미지 다운로드",
+              url: "https://example.com/download-scene",
+              icon: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
+            },
+            {
+              text: "장면 정보 보기",
+              url: "https://example.com/scene-info",
+              icon: "M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z",
+            },
+          ],
         },
       };
 
@@ -255,6 +348,25 @@
           item.innerHTML = `<span class="detail-label">${key}</span><span class="detail-value">${val}</span>`;
           details.appendChild(item);
         });
+
+        // 액션 버튼 생성
+        const buttonGroup = document.getElementById("action-buttons");
+        buttonGroup.innerHTML = "";
+        if (data.actions) {
+          data.actions.forEach((action) => {
+            const button = document.createElement("a");
+            button.href = action.url;
+            button.className = "action-button";
+            button.target = "_blank";
+            button.innerHTML = `
+              ${action.text}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="${action.icon}"></path>
+              </svg>
+            `;
+            buttonGroup.appendChild(button);
+          });
+        }
       }
 
       function closeInfoPanel() {
@@ -264,6 +376,83 @@
         document.getElementById("panel-title").textContent = "정보 패널";
       }
 
+      // 자동 좌표 변환 함수
+
+      // 초기 좌표 저장 변수 추가 (targetCoords)
+      const targetCoords = {
+        "1번째 남자": { x: 0, y: 430, width: 304, height: 1246 },
+        "2번째 여자": { x: 305, y: 550, width: 245, height: 1246 },
+        "3번째 여자": { x: 551, y: 550, width: 249, height: 1246 },
+        "4번째 남자": { x: 801, y: 450, width: 275, height: 1246 },
+        "5번째 여자": { x: 1070, y: 580, width: 268, height: 1246 },
+        배경: { x: 0, y: 0, width: 1338, height: 1676 },
+      };
+
+      // 이미지맵 좌표와 하이라이트 완전 일치
+      function getImageMapRect(coords) {
+        // coords: "x1, y1, x2, y2" (원본 이미지 기준)
+        const img = document.getElementById("main-img");
+        const arr = coords.split(",").map((c) => parseInt(c.trim(), 10));
+
+        const alt = document.querySelector(`area[coords="${coords}"]`)?.getAttribute("alt");
+        if (alt && targetCoords[alt]) {
+          const target = targetCoords[alt];
+          // targetCoords 좌표 사용
+          const scaleX = img.clientWidth / img.naturalWidth;
+          const scaleY = img.clientHeight / img.naturalHeight;
+          return {
+            x: target.x * scaleX,
+            y: target.y * scaleY,
+            width: target.width * scaleX,
+            height: target.height * scaleY,
+          };
+        }
+
+        // 기존 방식 폴백
+        const scaleX = img.clientWidth / img.naturalWidth;
+        const scaleY = img.clientHeight / img.naturalHeight;
+        return {
+          x: arr[0] * scaleX,
+          y: arr[1] * scaleY,
+          width: (arr[2] - arr[0]) * scaleX,
+          height: (arr[3] - arr[1]) * scaleY,
+        };
+      }
+
+      function showHighlight(coords, isBackground = false) {
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.innerHTML = "";
+        const rectData = getImageMapRect(coords);
+
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", rectData.x);
+        rect.setAttribute("y", rectData.y);
+        rect.setAttribute("width", rectData.width);
+        rect.setAttribute("height", rectData.height);
+        rect.setAttribute("rx", "12");
+
+        if (isBackground) {
+          rect.setAttribute("fill", "rgba(124,58,237,0.05)");
+          rect.setAttribute("stroke", "#7c3aed");
+          rect.setAttribute("stroke-width", "2");
+          rect.setAttribute("stroke-dasharray", "8 4");
+        } else {
+          rect.setAttribute("fill", "rgba(124,58,237,0.15)");
+          rect.setAttribute("stroke", "#7c3aed");
+          rect.setAttribute("stroke-width", "4");
+        }
+
+        highlightSvg.appendChild(rect);
+        rect.setAttribute("rx", "12");
+        highlightSvg.appendChild(rect);
+      }
+
+      function hideHighlight() {
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.innerHTML = "";
+      }
+
+      // 이벤트 연결 (좌표 자동 변환)
       document.querySelectorAll("area").forEach((area) => {
         area.addEventListener("click", (e) => {
           e.preventDefault();
@@ -271,7 +460,25 @@
           const data = infoMapData[alt];
           if (data) openInfoPanel(data);
         });
+        area.addEventListener("mouseenter", () => {
+          const isBackground = area.getAttribute("alt") === "배경";
+          showHighlight(area.getAttribute("coords"), isBackground);
+        });
+        area.addEventListener("mouseleave", hideHighlight);
       });
+
+      // 이미지 리사이즈/로드 시 하이라이트 SVG 크기 동기화
+      function syncSvgSize() {
+        const img = document.getElementById("main-img");
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.setAttribute("width", img.clientWidth);
+        highlightSvg.setAttribute("height", img.clientHeight);
+        highlightSvg.style.width = img.clientWidth + "px";
+        highlightSvg.style.height = img.clientHeight + "px";
+      }
+      document.getElementById("main-img").addEventListener("load", syncSvgSize);
+      window.addEventListener("resize", syncSvgSize);
+      syncSvgSize();
     </script>
   </body>
 </html>
