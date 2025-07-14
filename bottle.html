@@ -103,6 +103,41 @@
         line-height: 1.6;
         font-size: 15px;
       }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .action-button:hover {
+        background-color: #7c3aed;
+        border-color: #7c3aed;
+        color: white;
+      }
+
+      .action-button svg {
+        width: 20px;
+        height: 20px;
+        margin-left: 8px;
+      }
     </style>
   </head>
   <body>
@@ -110,17 +145,18 @@
       <div class="image-section">
         <div id="container">
           <img id="main-img" src="static/bottle.png" usemap="#map" alt="이미지" />
+          <svg id="highlight-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2"></svg>
         </div>
         <map name="map" id="img-map">
-          <area id="target-box" shape="rect" coords="0,0,0,0" alt="소주병" />
-          <area id="rest-box" shape="rect" coords="0,0,0,0" alt="배경" />
+          <area id="target-box" shape="rect" coords="528, 257, 555, 360" alt="소주병" />
+          <area id="rest-box" shape="rect" coords="0,0,1075,590" alt="배경" />
         </map>
       </div>
 
       <div id="info-panel" class="info-panel">
         <div class="panel-header">
           <h2 id="panel-title" class="modal-title">정보 패널</h2>
-          <button class="modal-close" onclick="closeInfoPanel()">×</button>
+          <button class="modal-close" onclick="closeInfoPanel()"></button>
         </div>
         <div class="panel-content">
           <div id="panel-placeholder" class="panel-placeholder">
@@ -129,40 +165,101 @@
           </div>
           <div id="panel-info" style="display: none">
             <p id="panel-description" class="modal-description"></p>
+            <div class="button-group" id="action-buttons"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <script>
-      const originalSize = { width: 2560, height: 1409 };
-      const targetCoords = [1260, 630, 1310, 850];
+    <!-- SVG 아이콘 정의 -->
+    <svg style="display: none">
+      <defs>
+        <symbol id="icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d=""></path>
+        </symbol>
+      </defs>
+    </svg>
 
-      function updateCoords() {
+    <script>
+      // 하이라이트 SVG 표시 함수
+      let currentHighlightCoords = null;
+      function showHighlight(coords, isBackground = false) {
+        currentHighlightCoords = coords;
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.innerHTML = "";
         const img = document.getElementById("main-img");
         const scaleX = img.clientWidth / originalSize.width;
         const scaleY = img.clientHeight / originalSize.height;
 
-        const scaleCoord = (coords) => coords.map((val, idx) => Math.round(val * (idx % 2 === 0 ? scaleX : scaleY)));
+        // coords 문자열을 배열로 변환
+        const arr = Array.isArray(coords) ? coords : coords.split(",").map(Number);
 
-        const scaledTarget = scaleCoord(targetCoords);
-        const scaledBackground = scaleCoord([0, 0, originalSize.width, originalSize.height]);
-
-        document.getElementById("target-box").coords = scaledTarget.join(",");
-        document.getElementById("rest-box").coords = scaledBackground.join(",");
+        // 배경 영역이면 전체 이미지 크기로 설정
+        let x, y, w, h;
+        if (isBackground) {
+          x = 0;
+          y = 0;
+          w = img.clientWidth;
+          h = img.clientHeight;
+        } else {
+          x = arr[0] * scaleX;
+          y = arr[1] * scaleY;
+          w = (arr[2] - arr[0]) * scaleX;
+          h = (arr[3] - arr[1]) * scaleY;
+        }
+        // 하이라이트 SVG 크기 동기화
+        highlightSvg.setAttribute("width", img.clientWidth);
+        highlightSvg.setAttribute("height", img.clientHeight);
+        highlightSvg.style.width = img.clientWidth + "px";
+        highlightSvg.style.height = img.clientHeight + "px";
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", w);
+        rect.setAttribute("height", h);
+        rect.setAttribute("fill", "rgba(124,58,237,0.15)");
+        rect.setAttribute("stroke", "#7c3aed");
+        rect.setAttribute("stroke-width", "4");
+        rect.setAttribute("rx", "12");
+        highlightSvg.appendChild(rect);
       }
 
-      window.addEventListener("load", updateCoords);
-      window.addEventListener("resize", updateCoords);
+      function hideHighlight() {
+        document.getElementById("highlight-svg").innerHTML = "";
+        currentHighlightCoords = null;
+      }
+      const originalSize = { width: 1075, height: 590 };
+      const targetCoords = [528, 250, 555, 300];
+
+      // 이미지맵은 브라우저가 자동으로 스케일링 처리
 
       const infoMapData = {
         소주병: {
           name: "소주병",
           description: "선택된 사각형 영역입니다.",
+          actions: [
+            {
+              text: "상세 정보 보기",
+              url: "https://example.com/bottle",
+              icon: "M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25",
+            },
+            {
+              text: "관련 제품 보기",
+              url: "https://example.com/products",
+              icon: "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
+            },
+          ],
         },
         배경: {
-          name: "배경 전체",
+          name: "CU 편의점",
           description: "소주병을 제외한 전체 이미지 영역입니다.",
+          actions: [
+            {
+              text: "근처 CU 편의점 찾기",
+              url: "https://example.com/download",
+              icon: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
+            },
+          ],
         },
       };
 
@@ -171,6 +268,27 @@
         document.getElementById("panel-info").style.display = "block";
         document.getElementById("panel-title").textContent = data.name;
         document.getElementById("panel-description").textContent = data.description;
+
+        // 버튼 그룹 초기화
+        const buttonGroup = document.getElementById("action-buttons");
+        buttonGroup.innerHTML = "";
+
+        // 액션 버튼 생성
+        if (data.actions) {
+          data.actions.forEach((action) => {
+            const button = document.createElement("a");
+            button.href = action.url;
+            button.className = "action-button";
+            button.target = "_blank";
+            button.innerHTML = `
+              ${action.text}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="${action.icon}"></path>
+              </svg>
+            `;
+            buttonGroup.appendChild(button);
+          });
+        }
       }
 
       function closeInfoPanel() {
@@ -179,14 +297,48 @@
         document.getElementById("panel-title").textContent = "정보 패널";
       }
 
-      document.querySelectorAll("area").forEach((area) => {
-        area.addEventListener("click", (e) => {
-          e.preventDefault();
-          const alt = area.getAttribute("alt");
-          const data = infoMapData[alt];
-          if (data) openInfoPanel(data);
+      // area 이벤트 연결 함수 (coords 최신값 사용)
+      // area 이벤트 연결 함수 (coords 최신값 사용, 중복 방지)
+      function bindAreaEvents() {
+        document.querySelectorAll("area").forEach((area) => {
+          // 기존 이벤트 제거
+          area.onmouseenter = null;
+          area.onmouseleave = null;
+          area.onclick = null;
+          // 새 이벤트 등록
+          area.onclick = function (e) {
+            e.preventDefault();
+            const alt = area.getAttribute("alt");
+            const data = infoMapData[alt];
+            if (data) openInfoPanel(data);
+          };
+          area.onmouseenter = function () {
+            const isBackground = area.getAttribute("alt") === "배경";
+            showHighlight(area.getAttribute("coords"), isBackground);
+          };
+          area.onmouseleave = hideHighlight;
         });
-      });
+      }
+
+      // updateCoords 실행 후에만 이벤트 1회 등록
+      // 페이지 로드 시 이벤트 바인딩
+      window.addEventListener("load", bindAreaEvents);
+      // 이미지 리사이즈/로드 시 하이라이트 SVG 크기 동기화
+      function syncSvgSize() {
+        const img = document.getElementById("main-img");
+        const highlightSvg = document.getElementById("highlight-svg");
+        highlightSvg.setAttribute("width", img.clientWidth);
+        highlightSvg.setAttribute("height", img.clientHeight);
+        highlightSvg.style.width = img.clientWidth + "px";
+        highlightSvg.style.height = img.clientHeight + "px";
+        // 리사이즈 시 하이라이트가 남아있으면 즉시 갱신
+        if (currentHighlightCoords) {
+          showHighlight(currentHighlightCoords);
+        }
+      }
+      document.getElementById("main-img").addEventListener("load", syncSvgSize);
+      window.addEventListener("resize", syncSvgSize);
+      syncSvgSize();
     </script>
   </body>
 </html>
